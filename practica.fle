@@ -1,0 +1,39 @@
+%%
+
+%class DetectaToken
+%standalone
+
+STR_QUOTES = \"[a-zA-Z0-9_ ]+\"
+IDENTIFIER = [a-zA-Z0-9_]+
+COMMENT_1 = \/\/.*(\r|\n)? 
+COMMENT_2 = #.*(\r|\n)?
+COMMENT_3 =  \/\*(.*|\r\n)*\*\/
+
+%%
+
+
+
+arbol { System.out.println("ARBOL " + yytext()); }
+node { System.out.println("NODE " + yytext()); }
+shape { System.out.println("SHAPE " + yytext()); }
+label { System.out.println("LABEL " + yytext()); }
+color { System.out.println("COLOR " + yytext()); }
+fontcolor { System.out.println("FONTCOLOR " + yytext()); }
+style { System.out.println("STYLE " + yytext()); }
+edge { System.out.println("EDGE " + yytext()); }
+dir { System.out.println("DIR " + yytext()); }
+hijos { System.out.println("HIJOS " + yytext()); }
+; { System.out.println("SEMI " + yytext()); }
+\[ { System.out.println("LSQB " + yytext()); }
+\] { System.out.println("RSQB " + yytext()); }
+= { System.out.println("EQUAL " + yytext()); }
+, { System.out.println("COMMA " + yytext()); }
+\" { System.out.println("QUOTE " + yytext()); } //puede que sobre
+\{ { System.out.println("LBRACE " + yytext()); }
+\} { System.out.println("RBRACE " + yytext()); }
+{COMMENT_1} { System.out.println("COMMENT_1 " + yytext()); }
+{COMMENT_2} { System.out.println("COMMENT_2 " + yytext()); }
+{COMMENT_3} { System.out.println("COMMENT_3 " + yytext()); }
+{STR_QUOTES} { System.out.println("STR_QUOTES " + yytext()); }
+{IDENTIFIER} { System.out.println("IDENTIFIER " + yytext()); }
+. {}
