@@ -1,0 +1,56 @@
+
+import java_cup.runtime.*;
+import java.io.*;
+
+parser code {:
+	public static void main(String args[]) throws Exception {
+
+ 		FileInputStream stream = new java.io.FileInputStream(args[0]);
+       		Reader reader = new java.io.InputStreamReader(stream);
+
+		try{
+			new parser(new Yylex(reader)).parse();
+		}
+		catch ( Exception e) {
+			System.out.println("Analisis INCORRECTO !!");
+			System.exit(1);
+		}
+		System.out.println("Analisis Correcto ");
+	
+		}
+:}
+
+terminal ARBOL, NODE, SHAPE, LABEL, COLOR, FONTCOLOR, STYLE, EDGE, DIR, HIJOS;
+terminal SEMI, LSQB, RSQB, EQUAL, COMMA, LBRACE, RBRACE;
+terminal COMMENT_1, COMMENT_2, COMMENT_3, STR_QUOTES, IDENTIFIER;
+
+non terminal lista_elementos_fichero, elemento_fichero;
+non terminal declaracion_arbol, lista_elementos_arbol, elemento_arbol; 
+non terminal caracteristica_nodos_aristas, valor_con_o_sin_comillas;
+non terminal propiedades_nodos, lista_caracteristicas_nodos;
+non terminal propiedades_aristas, lista_caracteristicas_aristas;
+non terminal definicion_nodo, definicion_hijos_nodo, lista_hijos_nodo, hijo_nodo;
+non terminal comentario;
+
+lista_elementos_fichero ::= lista_elementos_fichero elemento_fichero | elemento_fichero;
+elemento_fichero ::= declaracion_arbol | comentario;
+
+declaracion_arbol ::= ARBOL IDENTIFIER LBRACE lista_elementos_arbol RBRACE;
+lista_elementos_arbol ::= lista_elementos_arbol elemento_arbol | elemento_arbol; 
+elemento_arbol ::= propiedades_nodos | propiedades_aristas | definicion_nodo | comentario;
+
+valor_con_o_sin_comillas ::= STR_QUOTES | IDENTIFIER;
+caracteristica_nodos_aristas ::= LABEL EQUAL valor_con_o_sin_comillas | COLOR EQUAL valor_con_o_sin_comillas | FONTCOLOR EQUAL valor_con_o_sin_comillas | STYLE EQUAL valor_con_o_sin_comillas;
+
+propiedades_nodos ::= NODE LSQB lista_caracteristicas_nodos RSQB;
+lista_caracteristicas_nodos ::= lista_caracteristicas_nodos COMMA caracteristica_nodos_aristas | lista_caracteristicas_nodos COMMA SHAPE EQUAL valor_con_o_sin_comillas| caracteristica_nodos_aristas | SHAPE EQUAL valor_con_o_sin_comillas;
+
+propiedades_aristas ::= EDGE LSQB lista_caracteristicas_aristas RSQB;
+lista_caracteristicas_aristas ::= lista_caracteristicas_aristas COMMA caracteristica_nodos_aristas | lista_caracteristicas_aristas COMMA DIR EQUAL valor_con_o_sin_comillas | caracteristica_nodos_aristas | DIR EQUAL valor_con_o_sin_comillas;
+
+definicion_nodo ::= IDENTIFIER definicion_hijos_nodo LSQB lista_caracteristicas_nodos RSQB SEMI | IDENTIFIER LSQB lista_caracteristicas_nodos RSQB SEMI | IDENTIFIER SEMI; 
+definicion_hijos_nodo ::= HIJOS EQUAL LBRACE lista_hijos_nodo RBRACE;
+lista_hijos_nodo ::= lista_hijos_nodo COMMA hijo_nodo | hijo_nodo;
+hijo_nodo ::= IDENTIFIER LSQB lista_caracteristicas_aristas RSQB;
+
+comentario ::= COMMENT_1 | COMMENT_2 | COMMENT_3;
