@@ -1,0 +1,120 @@
+
+import java_cup.runtime.*;
+import java.io.*;
+import java.util.Stack;
+
+parser code {:
+	public static void main(String args[]) throws Exception {
+
+ 		FileInputStream stream = new java.io.FileInputStream(args[0]);
+       		Reader reader = new java.io.InputStreamReader(stream);
+
+		try{
+			new parser(new Yylex(reader)).parse();
+		}
+		catch ( Exception e) {
+			System.out.println("\n\nAnalisis INCORRECTO !!");
+			System.exit(1);
+		}
+		System.out.println("\n\nAnalisis Correcto ");
+	
+		}
+:}
+
+terminal ARBOL, NODE, SHAPE, LABEL, COLOR, FONTCOLOR, STYLE, EDGE, DIR, HIJOS;
+terminal SEMI, LSQB, RSQB, EQUAL, COMMA, LBRACE, RBRACE;
+terminal COMMENT_1, COMMENT_2, COMMENT_3, STR_QUOTES, IDENTIFIER;
+
+non terminal fichero, lista_elementos_fichero, elemento_fichero;
+non terminal declaracion_arbol, lista_elementos_arbol, elemento_arbol; 
+non terminal caracteristica_nodos_aristas, valor_con_o_sin_comillas;
+non terminal propiedades_nodos, lista_caracteristicas_nodos;
+non terminal propiedades_aristas, lista_caracteristicas_aristas;
+non terminal definicion_nodo;
+non terminal Stack definicion_hijos_nodo;
+non terminal Stack lista_hijos_nodo;
+non terminal Stack hijo_nodo;
+non terminal comentario;
+
+fichero ::= lista_elementos_fichero:l {: 
+										FileWriter escritor = new FileWriter("traduccion_dot.txt", false);
+      									escritor.write((String)l);
+      									escritor.close(); 
+									   :};
+lista_elementos_fichero ::= lista_elementos_fichero:l elemento_fichero:e {: RESULT = l+"\n"+e; :} 
+						  | elemento_fichero:e {: RESULT = e; :}
+						  ;
+elemento_fichero ::= declaracion_arbol:d {: RESULT = d; :} 
+				   | comentario:c {: RESULT = c; :} 
+				   ;
+
+
+declaracion_arbol ::= ARBOL IDENTIFIER:id LBRACE lista_elementos_arbol:l RBRACE {: RESULT = "digraph "+id+" {\n"+l+"\n}"; :} ;
+lista_elementos_arbol ::= lista_elementos_arbol:l elemento_arbol:e {: RESULT = l +"\n"+e; :} 
+						| elemento_arbol:e {: RESULT = e; :} 
+						; 
+elemento_arbol ::= propiedades_nodos:pn {: RESULT = pn; :} 
+				 | propiedades_aristas:pa {: RESULT = pa; :} 
+				 | definicion_nodo:d {: RESULT = d; :} 
+				 | comentario:c {: RESULT = c; :} 
+				 ;
+
+
+valor_con_o_sin_comillas ::= STR_QUOTES:str_q {: RESULT = str_q; :} 
+						   | IDENTIFIER:id {: RESULT = id; :}
+						   ;
+caracteristica_nodos_aristas ::= LABEL EQUAL valor_con_o_sin_comillas:v {: RESULT = "label = "+v; :}
+							   | COLOR EQUAL valor_con_o_sin_comillas:v {: RESULT = "color = "+v; :}
+							   | FONTCOLOR EQUAL valor_con_o_sin_comillas:v {: RESULT = "fontcolor = "+v; :}
+							   | STYLE EQUAL valor_con_o_sin_comillas:v {: RESULT = "style = "+v; :}
+							   ;
+
+
+propiedades_nodos ::= NODE LSQB lista_caracteristicas_nodos:l RSQB {: RESULT = "node ["+l+"]"; :};
+lista_caracteristicas_nodos ::= lista_caracteristicas_nodos:l COMMA caracteristica_nodos_aristas:c {: RESULT = l+", "+c; :} 
+							  | lista_caracteristicas_nodos:l COMMA SHAPE EQUAL valor_con_o_sin_comillas:v {: RESULT = l+", shape = "+v; :}
+							  | caracteristica_nodos_aristas:c {: RESULT = c; :}
+							  | SHAPE EQUAL valor_con_o_sin_comillas:v {: RESULT = "shape = "+v; :}
+							  ;
+
+
+propiedades_aristas ::= EDGE LSQB lista_caracteristicas_aristas:l RSQB {: RESULT = "edge ["+l+"]"; :};
+lista_caracteristicas_aristas ::= lista_caracteristicas_aristas:l COMMA caracteristica_nodos_aristas:c {: RESULT = l+", "+c; :} 
+								| lista_caracteristicas_aristas:l COMMA DIR EQUAL valor_con_o_sin_comillas:v {: RESULT = l+", dir = "+v; :}
+								| caracteristica_nodos_aristas:c {: RESULT = c; :} 
+								| DIR EQUAL valor_con_o_sin_comillas:v {: RESULT = "dir = "+v; :}
+								;
+
+
+definicion_nodo ::= IDENTIFIER:id definicion_hijos_nodo:h LSQB lista_caracteristicas_nodos:l RSQB SEMI {: 	String cadena_devolver = id+" ["+l+"];";
+																											while (!h.empty()){
+																												cadena_devolver += "\n"+ id + " -> " + h.pop() + ";";
+																											}
+																											RESULT = cadena_devolver; 
+																										:} 
+				  | IDENTIFIER:id LSQB lista_caracteristicas_nodos:l RSQB SEMI {: RESULT = id+" ["+l+"];"; :}
+				  | IDENTIFIER:id SEMI {: RESULT = id+";"; :}
+				  ; 
+definicion_hijos_nodo ::= HIJOS EQUAL LBRACE lista_hijos_nodo:l RBRACE {: RESULT = l; :};
+lista_hijos_nodo ::= lista_hijos_nodo:l COMMA hijo_nodo:h {: 
+															Stack pila = new Stack();
+															while (!l.empty()){
+																pila.push(l.pop());
+															}
+															pila.push(h.pop());
+															RESULT = pila; 
+														   :}
+				   | hijo_nodo:h {: RESULT = h; :}
+				   ; 
+hijo_nodo ::= IDENTIFIER:id LSQB lista_caracteristicas_aristas:l RSQB {: 
+																		Stack pila = new Stack();
+																		pila.push(id + " [" + l + "]");
+																		RESULT = pila; 
+																	   :};
+
+
+comentario ::= COMMENT_1:comm_1 {: RESULT = comm_1; :}
+			 | COMMENT_2:comm_2 {: RESULT = comm_2; :}
+			 | COMMENT_3:comm_3 {: RESULT = comm_3; :}
+			 ;
+
